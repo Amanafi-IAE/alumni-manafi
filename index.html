@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alumni MANAFI — Master Finance IAE Paris</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
+  <style>
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #EEEDFE 0%, #F7F7FB 60%);
+      padding: 40px 24px;
+    }
+    .hero-content { max-width: 560px; text-align: center; }
+    .hero-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      background: var(--purple-light);
+      color: var(--purple);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+    .hero h1 { font-size: 36px; font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+    .hero h1 span { color: var(--purple); }
+    .hero p { font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.7; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-stats { display: flex; gap: 32px; justify-content: center; margin-top: 48px; flex-wrap: wrap; }
+    .hero-stat { text-align: center; }
+    .hero-stat-num { font-size: 28px; font-weight: 700; color: var(--purple); }
+    .hero-stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .features { padding: 80px 24px; background: var(--white); }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
+    .feature-card { padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); }
+    .feature-icon { font-size: 28px; margin-bottom: 12px; }
+    .feature-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .feature-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+    .section-label { text-align: center; font-size: 13px; font-weight: 600; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .section-title { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 40px; }
+    footer { padding: 32px 24px; text-align: center; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--border); }
+    footer a { color: var(--text-secondary); margin: 0 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- Simple top bar -->
+  <div style="background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:var(--purple);"></div>
+      Alumni MANAFI
+    </div>
+    <a href="login.html" class="btn btn-primary btn-sm">Se connecter</a>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🎓 Réseau privé · IAE Paris · Paris 1</div>
+      <h1>Le réseau des alumni <span>MANAFI</span></h1>
+      <p>Connectez-vous avec les anciens du Master Finance — Management Financier de l'IAE Paris. Annuaire, offres d'emploi, événements — tout en un seul endroit, en accès privé.</p>
+      <div class="hero-btns">
+        <a href="login.html" class="btn btn-primary">Accéder à la plateforme →</a>
+        <a href="mailto:alumni.manafi@gmail.com" class="btn btn-secondary">Rejoindre le réseau</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num">200+</div>
+          <div class="hero-stat-label">Alumni</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">10+</div>
+          <div class="hero-stat-label">Promotions</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">15+</div>
+          <div class="hero-stat-label">Pays</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="section-label">Ce que vous trouverez</div>
+    <div class="section-title">Une plateforme pensée pour le réseau</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Annuaire alumni</div>
+        <div class="feature-desc">Retrouvez tous les anciens du master, filtrez par promotion, secteur ou localisation.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💼</div>
+        <div class="feature-title">Offres d'emploi</div>
+        <div class="feature-desc">Les alumni partagent les opportunités dans leurs entreprises — CDI, stages, alternances.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <div class="feature-title">Événements</div>
+        <div class="feature-desc">Afterworks, conférences, remises de diplômes — restez informés de toutes les rencontres.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Accès privé</div>
+        <div class="feature-desc">Plateforme réservée aux membres. Données hébergées en Europe, conformes RGPD.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>© 2025 Alumni MANAFI · Master Finance — Management Financier · IAE Paris · Université Paris 1 Panthéon-Sorbonne</div>
+    <div style="margin-top:8px;">
+      <a href="confidentialite.html">Politique de confidentialité</a>
+      <a href="mailto:alumni.manafi@gmail.com">Contact</a>
+    </div>
+  </footer>
+
+  <script>
+    // Redirect if already logged in
+    const session = localStorage.getItem('appwrite_session');
+    if (session) window.location.href = 'annuaire.html';
+  </script>
+</body>
+</html>

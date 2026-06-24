@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion — Alumni MANAFI</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="card login-card">
+      <div class="login-logo">
+        <div style="display:flex;justify-content:center;">
+          <div style="width:48px;height:48px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;">
+            <span style="color:white;font-size:20px;font-weight:700;">A</span>
+          </div>
+        </div>
+        <h1>Alumni MANAFI</h1>
+        <p>Master Finance — Management Financier<br>IAE Paris · Paris 1 Panthéon-Sorbonne</p>
+      </div>
+
+      <div id="alert-box"></div>
+
+      <div class="form-group">
+        <label for="email">Adresse email</label>
+        <input type="email" id="email" placeholder="prenom.nom@email.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="login()" id="login-btn">
+        Se connecter
+      </button>
+
+      <div class="login-footer">
+        Première connexion ? Contactez-nous à<br>
+        <a href="mailto:alumni.manafi@gmail.com">alumni.manafi@gmail.com</a>
+      </div>
+
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text-secondary);">
+        <a href="confidentialite.html" style="color:var(--text-secondary);">Politique de confidentialité</a>
+        &nbsp;·&nbsp;
+        Données hébergées en EU 🇪🇺
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    const session = localStorage.getItem('appwrite_session');
+    if (session) window.location.href = 'annuaire.html';
+
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('login-btn');
+      const alertBox = document.getElementById('alert-box');
+
+      if (!email || !password) {
+        alertBox.innerHTML = '<div class="alert alert-error">Veuillez remplir tous les champs.</div>';
+        return;
+      }
+
+      btn.textContent = 'Connexion…';
+      btn.disabled = true;
+      alertBox.innerHTML = '';
+
+      try {
+        const res = await fetch(`${CONFIG.APPWRITE_ENDPOINT}/account/sessions/email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Appwrite-Project': CONFIG.APPWRITE_PROJECT_ID,
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Erreur de connexion');
+        }
+
+        // Store session
+        localStorage.setItem('appwrite_session', data.$id);
+        localStorage.setItem('appwrite_user_email', email);
+
+        window.location.href = 'annuaire.html';
+
+      } catch (err) {
+        alertBox.innerHTML = `<div class="alert alert-error">Email ou mot de passe incorrect. Contactez alumni.manafi@gmail.com si besoin.</div>`;
+        btn.textContent = 'Se connecter';
+        btn.disabled = false;
+      }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>

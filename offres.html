@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offres — Alumni MANAFI</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+</head>
+<body>
+  <div id="nav-container"></div>
+
+  <div class="container">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h1>Offres d'emploi</h1>
+        <p>Opportunités partagées par les alumni du réseau</p>
+      </div>
+      <a href="https://tally.so" target="_blank" class="btn btn-primary">+ Déposer une offre</a>
+    </div>
+
+    <div class="search-row">
+      <input class="search-input" id="search" placeholder="Rechercher par titre, entreprise, secteur…" oninput="filterOffres()" />
+      <select class="search-input" id="filter-type" onchange="filterOffres()" style="max-width:180px;">
+        <option value="">Tous les types</option>
+        <option value="CDI">CDI</option>
+        <option value="CDD">CDD</option>
+        <option value="Stage">Stage</option>
+        <option value="Alternance">Alternance</option>
+      </select>
+    </div>
+
+    <div class="grid-2" id="offres-grid">
+      <div class="loading">Chargement des offres…</div>
+    </div>
+  </div>
+
+  <script>
+    let allOffres = [];
+
+    const typeColors = {
+      CDI: 'tag-green', CDD: 'tag-blue', Stage: 'tag-amber', Alternance: 'tag-purple',
+    };
+
+    async function init() {
+      const user = await checkAuth();
+      if (!user) return;
+
+      document.getElementById('nav-container').innerHTML = renderNav('offres.html', user.email);
+
+      try {
+        const data = await baserowGet(CONFIG.TABLE_OFFRES, '&filter__Statut__equal=Publiée');
+        allOffres = data.results || [];
+        renderOffres(allOffres);
+      } catch (e) {
+        document.getElementById('offres-grid').innerHTML = '<div class="empty"><h3>Erreur de chargement</h3></div>';
+      }
+    }
+
+    function filterOffres() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const type = document.getElementById('filter-type').value;
+      const filtered = allOffres.filter(o => {
+        const matchQ = !q || [o['Poste'], o['Entreprise'], o['Description']].join(' ').toLowerCase().includes(q);
+        const matchType = !type || o['Type de poste'] === type;
+        return matchQ && matchType;
+      });
+      renderOffres(filtered);
+    }
+
+    function renderOffres(list) {
+      const grid = document.getElementById('offres-grid');
+      if (!list.length) {
+        grid.innerHTML = '<div class="empty"><h3>Aucune offre disponible</h3><p>Revenez prochainement.</p></div>';
+        return;
+      }
+      grid.innerHTML = list.map(o => {
+        const type = o['Type de poste'] || '';
+        const tagClass = typeColors[type] || 'tag-purple';
+        const date = o['Date'] ? new Date(o['Date']).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+        return `
+          <div class="card job-card">
+            <div>
+              <div class="job-title">${o['Poste'] || 'Poste non précisé'}</div>
+              <div class="job-company">${o['Entreprise'] || ''}</div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              ${type ? `<span class="tag ${tagClass}">${type}</span>` : ''}
+            </div>
+            ${o['Description'] ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">${o['Description'].substring(0, 150)}${o['Description'].length > 150 ? '…' : ''}</div>` : ''}
+            <div class="job-footer">
+              <span style="font-size:11px;color:var(--text-secondary);">${date}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>

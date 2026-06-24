@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Événements — Alumni MANAFI</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+</head>
+<body>
+  <div id="nav-container"></div>
+
+  <div class="container" style="max-width:760px;">
+    <div class="page-header">
+      <h1>Événements</h1>
+      <p>Retrouvez les alumni lors des prochains événements du réseau</p>
+    </div>
+
+    <div id="events-list">
+      <div class="loading">Chargement des événements…</div>
+    </div>
+  </div>
+
+  <script>
+    const MOIS = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+
+    async function init() {
+      const user = await checkAuth();
+      if (!user) return;
+
+      document.getElementById('nav-container').innerHTML = renderNav('evenements.html', user.email);
+
+      try {
+        const data = await baserowGet(CONFIG.TABLE_EVENEMENTS);
+        const events = (data.results || []).sort((a, b) => new Date(a['Date']) - new Date(b['Date']));
+        renderEvents(events);
+      } catch (e) {
+        document.getElementById('events-list').innerHTML = '<div class="empty"><h3>Erreur de chargement</h3></div>';
+      }
+    }
+
+    function renderEvents(list) {
+      const container = document.getElementById('events-list');
+      const now = new Date();
+
+      const upcoming = list.filter(e => !e['Date'] || new Date(e['Date']) >= now);
+      const past = list.filter(e => e['Date'] && new Date(e['Date']) < now);
+
+      let html = '';
+
+      if (upcoming.length) {
+        html += '<h2 style="font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">À venir</h2>';
+        html += upcoming.map(e => renderEvent(e, false)).join('');
+      }
+
+      if (past.length) {
+        html += '<h2 style="font-size:14px;font-weight:600;color:var(--text-secondary);margin:24px 0 12px;text-transform:uppercase;letter-spacing:0.5px;">Événements passés</h2>';
+        html += past.reverse().map(e => renderEvent(e, true)).join('');
+      }
+
+      if (!list.length) {
+        html = '<div class="empty"><h3>Aucun événement pour le moment</h3><p>Revenez prochainement.</p></div>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderEvent(e, isPast) {
+      const date = e['Date'] ? new Date(e['Date']) : null;
+      const day = date ? date.getDate() : '—';
+      const month = date ? MOIS[date.getMonth()] : '';
+      const dateStr = date ? date.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '';
+
+      return `
+        <div class="card event-card" style="margin-bottom:12px;${isPast ? 'opacity:0.6;' : ''}">
+          <div class="event-date">
+            <div class="event-day">${day}</div>
+            <div class="event-month">${month}</div>
+          </div>
+          <div class="event-info">
+            <div class="event-name">${e['Nom'] || 'Événement'}</div>
+            <div class="event-sub">${dateStr}${e['Lieu'] ? ' · ' + e['Lieu'] : ''}</div>
+            ${e['Description'] ? `<div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6;">${e['Description']}</div>` : ''}
+            ${e['Lien inscription'] && !isPast ? `<a href="${e['Lien inscription']}" target="_blank" class="btn btn-primary btn-sm" style="margin-top:10px;">S'inscrire</a>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    init();
+  </script>
+</body>
+</html>
