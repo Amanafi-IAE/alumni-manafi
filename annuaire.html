@@ -51,8 +51,8 @@
       document.getElementById('nav-container').innerHTML = renderNav('annuaire.html', user.email);
 
       try {
-        const data = await baserowGet(CONFIG.TABLE_ALUMNI, '&filter__Status__equal=Actif');
-        allAlumni = (data.results || []).filter(a => a['RGPD'] === true);
+        const data = await baserowGet(CONFIG.TABLE_ALUMNI, '');
+        allAlumni = (data.results || []).filter(a => a['RGPD'] === true && a['Status'] && a['Status'].value === 'Actif');
         renderStats();
         renderFilters();
         renderAlumni(allAlumni);
