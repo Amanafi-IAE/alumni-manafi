@@ -60,7 +60,7 @@
       const alertBox = document.getElementById('alert-box');
 
       if (!email || !password) {
-        alertBox.innerHTML = '<div class="alert alert-error">Veuillez remplir tous les champs.</div>';
+        alertBox.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
         return;
       }
 
@@ -69,7 +69,7 @@
       alertBox.innerHTML = '';
 
       try {
-        const res = await fetch(`${CONFIG.APPWRITE_ENDPOINT}/account/sessions/email`, {
+        const res = await fetch(`${CONFIG.APPWRITE_ENDPOINT}/account/sessions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
