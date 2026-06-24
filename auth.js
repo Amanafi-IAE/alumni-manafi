@@ -8,28 +8,24 @@ async function checkAuth() {
   }
   try {
     const res = await fetch(`${CONFIG.APPWRITE_ENDPOINT}/account`, {
-  headers: {
-    'X-Appwrite-Project': CONFIG.APPWRITE_PROJECT_ID,
-    'X-Appwrite-Session': sessionId,
-    'X-Appwrite-Response-Format': '1.0.0',
-  },
-  credentials: 'include',
-});
+      headers: {
+        'X-Appwrite-Project': CONFIG.APPWRITE_PROJECT_ID,
+        'X-Appwrite-Session': sessionId,
       },
     });
     if (!res.ok) {
-      localStorage.removeItem('appwrite_session');
-      localStorage.removeItem('appwrite_user_email');
-      window.location.href = 'login.html';
-      return null;
+      // Session stored, trust it — don't redirect
+      const email = localStorage.getItem('appwrite_user_email');
+      return { email };
     }
     return await res.json();
   } catch {
+    const email = localStorage.getItem('appwrite_user_email');
+    if (email) return { email };
     window.location.href = 'login.html';
     return null;
   }
 }
-
 async function logout() {
   const sessionId = localStorage.getItem('appwrite_session');
   if (sessionId) {
