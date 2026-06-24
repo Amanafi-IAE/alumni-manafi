@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Annuaire — Alumni MANAFI</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
+  <script src="config.js?v=3"></script>
+  <script src="auth.js?v=3"></script>
 </head>
 <body>
   <div id="nav-container"></div>
@@ -52,10 +52,10 @@
 
       try {
         const data = await baserowGet(CONFIG.TABLE_ALUMNI, '');
-allAlumni = (data.results || []).filter(a => {
-  const status = Array.isArray(a['Status']) ? a['Status'][0]?.value : a['Status']?.value;
-  return a['RGPD'] === true && status === 'Actif';
-});
+        allAlumni = (data.results || []).filter(a => {
+          const status = Array.isArray(a['Status']) ? a['Status'][0]?.value : a['Status']?.value;
+          return a['RGPD'] === true && status === 'Actif';
+        });
         renderStats();
         renderFilters();
         renderAlumni(allAlumni);
@@ -66,7 +66,7 @@ allAlumni = (data.results || []).filter(a => {
 
     function renderStats() {
       document.getElementById('stat-total').textContent = allAlumni.length;
-      const promos = new Set(allAlumni.map(a => a['Promotion']).filter(Boolean));
+      const promos = new Set(allAlumni.map(a => a['Diplomé(e)']).filter(Boolean));
       const pays = new Set(allAlumni.map(a => a['Ville / Pays']).filter(Boolean));
       const secteurs = new Set(allAlumni.map(a => a['Secteur']).filter(Boolean));
       document.getElementById('stat-promos').textContent = promos.size;
@@ -75,7 +75,7 @@ allAlumni = (data.results || []).filter(a => {
     }
 
     function renderFilters() {
-      const promos = [...new Set(allAlumni.map(a => a['Promotion']).filter(Boolean))].sort((a,b) => b-a);
+      const promos = [...new Set(allAlumni.map(a => a['Diplomé(e)']).filter(Boolean))].sort((a,b) => b-a);
       const secteurs = [...new Set(allAlumni.map(a => a['Secteur']).filter(Boolean))].sort();
       const promoSel = document.getElementById('filter-promo');
       promos.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = `Promo ${p}`; promoSel.appendChild(o); });
@@ -89,7 +89,7 @@ allAlumni = (data.results || []).filter(a => {
       const secteur = document.getElementById('filter-secteur').value;
       const filtered = allAlumni.filter(a => {
         const matchQ = !q || [a['Prénom'], a['NOM'], a['Entreprise'], a['Poste'], a['Ville / Pays']].join(' ').toLowerCase().includes(q);
-        const matchPromo = !promo || String(a['Promotion']) === String(promo);
+        const matchPromo = !promo || String(a['Diplomé(e)']) === String(promo);
         const matchSecteur = !secteur || a['Secteur'] === secteur;
         return matchQ && matchPromo && matchSecteur;
       });
@@ -105,7 +105,7 @@ allAlumni = (data.results || []).filter(a => {
       grid.innerHTML = list.map(a => {
         const initials = getInitials(a['Prénom'], a['NOM']);
         const color = getAvatarColor(initials);
-        const promoTag = a['Promotion'] ? `<span class="tag tag-purple">Promo ${a['Promotion']}</span>` : '';
+        const promoTag = a['Diplomé(e)'] ? `<span class="tag tag-purple">Promo ${a['Diplomé(e)']}</span>` : '';
         const secteurTag = a['Secteur'] ? `<span class="tag tag-blue">${a['Secteur']}</span>` : '';
         return `
           <div class="card alumni-card" onclick="window.location.href='profil.html?id=${a['id']}'">
@@ -124,6 +124,6 @@ allAlumni = (data.results || []).filter(a => {
     }
 
     init();
-   <script>/* v3 */
+  </script>
 </body>
 </html>
