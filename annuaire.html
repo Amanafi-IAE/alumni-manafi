@@ -52,7 +52,10 @@
 
       try {
         const data = await baserowGet(CONFIG.TABLE_ALUMNI, '');
-        allAlumni = (data.results || []).filter(a => a['RGPD'] === true && a['Status'] && a['Status'].value === 'Actif');
+allAlumni = (data.results || []).filter(a => {
+  const status = Array.isArray(a['Status']) ? a['Status'][0]?.value : a['Status']?.value;
+  return a['RGPD'] === true && status === 'Actif';
+});
         renderStats();
         renderFilters();
         renderAlumni(allAlumni);
