@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profil — Alumni MANAFI</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
+  <link rel="stylesheet" href="style.css?v=3" />
+  <script src="config.js?v=3"></script>
+  <script src="auth.js?v=3"></script>
 </head>
 <body>
   <div id="nav-container"></div>
@@ -39,7 +39,7 @@
         const isOwn = user.email === a['Courriel'];
 
         document.getElementById('profile-content').innerHTML = `
-          <a href="annuaire.html" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;">← Retour à l'annuaire</a>
+          <a href="annuaire.html?v=4" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;">← Retour à l'annuaire</a>
 
           <div class="card" style="margin-bottom:16px;">
             <div class="profile-hero">
@@ -49,12 +49,12 @@
                 <p>${a['Poste'] || ''}${a['Entreprise'] ? ' · ' + a['Entreprise'] : ''}</p>
                 <p style="margin-top:2px;">${a['Ville / Pays'] || ''}</p>
                 <div class="profile-tags">
-                  ${a['Diplomé(e)'] ? `<span class="tag tag-purple">Promo ${a['Promotion']}</span>` : ''}
+                  ${a['Diplomé(e)'] ? `<span class="tag tag-purple">Promo ${a['Diplomé(e)']}</span>` : ''}
                   ${a['Secteur'] ? `<span class="tag tag-blue">${a['Secteur']}</span>` : ''}
                 </div>
               </div>
             </div>
-            ${a['LinkedIn'] ? `<a href="${a['LinkedIn']}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:8px;">🔗 Voir le profil LinkedIn</a>` : ''}
+            ${a['Linkedin'] ? `<a href="${a['Linkedin']}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:8px;">🔗 Voir le profil LinkedIn</a>` : ''}
           </div>
 
           <div class="card" style="margin-bottom:16px;">
@@ -84,7 +84,7 @@
               ${a['Poste'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Poste</span>${a['Poste']}</div>` : ''}
               ${a['Ville / Pays'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Localisation</span>${a['Ville / Pays']}</div>` : ''}
               ${a['Secteur'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Secteur</span>${a['Secteur']}</div>` : ''}
-              ${a['Promotion'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Promotion</span>${a['Promotion']}</div>` : ''}
+              ${a['Diplomé(e)'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Promotion</span>${a['Diplomé(e)']}</div>` : ''}
             </div>
           </div>
         `;
@@ -92,34 +92,3 @@
         document.getElementById('profile-content').innerHTML = '<div class="empty"><h3>Profil introuvable</h3></div>';
       }
     }
-
-    function toggleEdit() {
-      const display = document.getElementById('bio-display');
-      const edit = document.getElementById('bio-edit');
-      if (edit.style.display === 'none') {
-        display.style.display = 'none';
-        edit.style.display = 'block';
-      } else {
-        display.style.display = 'block';
-        edit.style.display = 'none';
-      }
-    }
-
-    async function saveBio(rowId) {
-      const bio = document.getElementById('bio-input').value;
-      const alertEl = document.getElementById('bio-alert');
-      try {
-        await baserowUpdate(CONFIG.TABLE_ALUMNI, rowId, { 'Bio': bio });
-        document.getElementById('bio-display').textContent = bio || 'Aucune description pour le moment.';
-        document.getElementById('bio-display').style.display = 'block';
-        document.getElementById('bio-edit').style.display = 'none';
-        alertEl.innerHTML = '';
-      } catch (e) {
-        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Erreur lors de la sauvegarde.</div>';
-      }
-    }
-
-    init();
-  </script>
-</body>
-</html>
