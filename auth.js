@@ -1,42 +1,19 @@
 // auth.js — shared authentication helpers
+const CONFIG_CHECK = () => {
+  const email = localStorage.getItem('appwrite_user_email');
+  const session = localStorage.getItem('appwrite_session');
+  if (!email || !session) {
+    window.location.href = 'login.html';
+    return null;
+  }
+  return { email };
+};
 
 async function checkAuth() {
-  const sessionId = localStorage.getItem('appwrite_session');
-  if (!sessionId) {
-    window.location.href = 'login.html';
-    return null;
-  }
-  try {
-    const res = await fetch(`${CONFIG.APPWRITE_ENDPOINT}/account`, {
-      headers: {
-        'X-Appwrite-Project': CONFIG.APPWRITE_PROJECT_ID,
-        'X-Appwrite-Session': sessionId,
-      },
-    });
-    if (!res.ok) {
-      // Session stored, trust it — don't redirect
-      const email = localStorage.getItem('appwrite_user_email');
-      return { email };
-    }
-    return await res.json();
-  } catch {
-    const email = localStorage.getItem('appwrite_user_email');
-    if (email) return { email };
-    window.location.href = 'login.html';
-    return null;
-  }
+  return CONFIG_CHECK();
 }
-async function logout() {
-  const sessionId = localStorage.getItem('appwrite_session');
-  if (sessionId) {
-    await fetch(`${CONFIG.APPWRITE_ENDPOINT}/account/sessions/${sessionId}`, {
-      method: 'DELETE',
-      headers: {
-        'X-Appwrite-Project': CONFIG.APPWRITE_PROJECT_ID,
-        'X-Appwrite-Session': sessionId,
-      },
-    }).catch(() => {});
-  }
+
+function logout() {
   localStorage.removeItem('appwrite_session');
   localStorage.removeItem('appwrite_user_email');
   window.location.href = 'login.html';
