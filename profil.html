@@ -10,84 +10,18 @@
 </head>
 <body>
   <div id="nav-container"></div>
-
   <div class="container" style="max-width:700px;">
     <div id="profile-content">
       <div class="loading">Chargement du profil…</div>
     </div>
   </div>
-
   <script>
     async function init() {
       const user = await checkAuth();
       if (!user) return;
-
       document.getElementById('nav-container').innerHTML = renderNav('annuaire.html', user.email);
-
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
       if (!id) { window.location.href = 'annuaire.html'; return; }
-
       try {
         const res = await fetch(`${CONFIG.BASEROW_URL}/${CONFIG.TABLE_ALUMNI}/${id}/?user_field_names=true`, {
-          headers: { Authorization: `Token ${CONFIG.BASEROW_TOKEN}` },
-        });
-        const a = await res.json();
-
-        const initials = getInitials(a['Prénom'], a['NOM']);
-        const color = getAvatarColor(initials);
-        const isOwn = user.email === a['Courriel'];
-
-        document.getElementById('profile-content').innerHTML = `
-          <a href="annuaire.html?v=4" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;">← Retour à l'annuaire</a>
-
-          <div class="card" style="margin-bottom:16px;">
-            <div class="profile-hero">
-              <div class="profile-avatar" style="background:${color.bg};color:${color.color};">${initials}</div>
-              <div class="profile-info" style="flex:1;">
-                <h1>${a['Prénom'] || ''} ${a['NOM'] || ''}</h1>
-                <p>${a['Poste'] || ''}${a['Entreprise'] ? ' · ' + a['Entreprise'] : ''}</p>
-                <p style="margin-top:2px;">${a['Ville / Pays'] || ''}</p>
-                <div class="profile-tags">
-                  ${a['Diplomé(e)'] ? `<span class="tag tag-purple">Diplomé(e) ${a['Diplomé(e)']}</span>` : ''}
-                  ${a['Secteur'] ? `<span class="tag tag-blue">${a['Secteur']}</span>` : ''}
-                </div>
-              </div>
-            </div>
-            ${a['Linkedin'] ? `<a href="${a['Linkedin']}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:8px;">🔗 Voir le profil LinkedIn</a>` : ''}
-          </div>
-
-          <div class="card" style="margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-              <h3 style="font-size:15px;font-weight:600;">À propos</h3>
-              ${isOwn ? `<button class="btn btn-secondary btn-sm" onclick="toggleEdit()">✏️ Modifier ma bio</button>` : ''}
-            </div>
-            <div id="bio-display" style="font-size:14px;color:var(--text-secondary);line-height:1.7;">
-              ${a['Bio'] || '<em>Aucune description pour le moment.</em>'}
-            </div>
-            ${isOwn ? `
-              <div id="bio-edit" style="display:none;">
-                <textarea id="bio-input" rows="5" placeholder="Parlez de votre parcours, vos expertises, vos projets…">${a['Bio'] || ''}</textarea>
-                <div style="display:flex;gap:8px;margin-top:10px;">
-                  <button class="btn btn-primary btn-sm" onclick="saveBio(${a['id']})">Enregistrer</button>
-                  <button class="btn btn-secondary btn-sm" onclick="toggleEdit()">Annuler</button>
-                </div>
-                <div id="bio-alert"></div>
-              </div>
-            ` : ''}
-          </div>
-
-          <div class="card">
-            <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">Informations</h3>
-            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-              ${a['Entreprise'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Entreprise</span>${a['Entreprise']}</div>` : ''}
-              ${a['Poste'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Poste</span>${a['Poste']}</div>` : ''}
-              ${a['Ville / Pays'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Localisation</span>${a['Ville / Pays']}</div>` : ''}
-              ${a['Secteur'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Secteur</span>${a['Secteur']}</div>` : ''}
-              ${a['Diplomé(e)'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Promotion</span>${a['Diplomé(e)']}</div>` : ''}
-          </div>
-        `;
-      } catch (e) {
-        document.getElementById('profile-content').innerHTML = '<div class="empty"><h3>Profil introuvable</h3></div>';
-      }
-    }
