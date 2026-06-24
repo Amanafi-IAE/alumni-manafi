@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Annuaire — Alumni MANAFI</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=3" />
   <script src="config.js?v=3"></script>
   <script src="auth.js?v=3"></script>
 </head>
@@ -21,15 +21,15 @@
 
     <div class="stats-row" id="stats-row">
       <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Alumni</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-promos">—</div><div class="stat-label">Promotions</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-diplomes">—</div><div class="stat-label">Années</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-pays">—</div><div class="stat-label">Pays</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-secteurs">—</div><div class="stat-label">Secteurs</div></div>
     </div>
 
     <div class="search-row">
       <input class="search-input" id="search" placeholder="Rechercher par nom, entreprise, poste…" oninput="filterAlumni()" />
-      <select class="search-input" id="filter-promo" onchange="filterAlumni()" style="max-width:160px;">
-        <option value="">Toutes les promos</option>
+      <select class="search-input" id="filter-diplome" onchange="filterAlumni()" style="max-width:180px;">
+        <option value="">Toutes les années</option>
       </select>
       <select class="search-input" id="filter-secteur" onchange="filterAlumni()" style="max-width:180px;">
         <option value="">Tous les secteurs</option>
@@ -53,77 +53,3 @@
       try {
         const data = await baserowGet(CONFIG.TABLE_ALUMNI, '');
         allAlumni = (data.results || []).filter(a => {
-          const status = Array.isArray(a['Status']) ? a['Status'][0]?.value : a['Status']?.value;
-          return a['RGPD'] === true && status === 'Actif';
-        });
-        renderStats();
-        renderFilters();
-        renderAlumni(allAlumni);
-      } catch (e) {
-        document.getElementById('alumni-grid').innerHTML = '<div class="empty"><h3>Erreur de chargement</h3><p>Vérifiez votre connexion.</p></div>';
-      }
-    }
-
-    function renderStats() {
-      document.getElementById('stat-total').textContent = allAlumni.length;
-      const promos = new Set(allAlumni.map(a => a['Diplomé(e)']).filter(Boolean));
-      const pays = new Set(allAlumni.map(a => a['Ville / Pays']).filter(Boolean));
-      const secteurs = new Set(allAlumni.map(a => a['Secteur']).filter(Boolean));
-      document.getElementById('stat-promos').textContent = promos.size;
-      document.getElementById('stat-pays').textContent = pays.size;
-      document.getElementById('stat-secteurs').textContent = secteurs.size;
-    }
-
-    function renderFilters() {
-      const promos = [...new Set(allAlumni.map(a => a['Diplomé(e)']).filter(Boolean))].sort((a,b) => b-a);
-      const secteurs = [...new Set(allAlumni.map(a => a['Secteur']).filter(Boolean))].sort();
-      const promoSel = document.getElementById('filter-promo');
-      promos.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = `Promo ${p}`; promoSel.appendChild(o); });
-      const sectSel = document.getElementById('filter-secteur');
-      secteurs.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sectSel.appendChild(o); });
-    }
-
-    function filterAlumni() {
-      const q = document.getElementById('search').value.toLowerCase();
-      const promo = document.getElementById('filter-promo').value;
-      const secteur = document.getElementById('filter-secteur').value;
-      const filtered = allAlumni.filter(a => {
-        const matchQ = !q || [a['Prénom'], a['NOM'], a['Entreprise'], a['Poste'], a['Ville / Pays']].join(' ').toLowerCase().includes(q);
-        const matchPromo = !promo || String(a['Diplomé(e)']) === String(promo);
-        const matchSecteur = !secteur || a['Secteur'] === secteur;
-        return matchQ && matchPromo && matchSecteur;
-      });
-      renderAlumni(filtered);
-    }
-
-    function renderAlumni(list) {
-      const grid = document.getElementById('alumni-grid');
-      if (!list.length) {
-        grid.innerHTML = '<div class="empty"><h3>Aucun alumni trouvé</h3><p>Modifiez votre recherche.</p></div>';
-        return;
-      }
-      grid.innerHTML = list.map(a => {
-        const initials = getInitials(a['Prénom'], a['NOM']);
-        const color = getAvatarColor(initials);
-        const promoTag = a['Diplomé(e)'] ? `<span class="tag tag-purple">Promo ${a['Diplomé(e)']}</span>` : '';
-        const secteurTag = a['Secteur'] ? `<span class="tag tag-blue">${a['Secteur']}</span>` : '';
-        return `
-          <div class="card alumni-card" onclick="window.location.href='profil.html?id=${a['id']}'">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div class="avatar" style="width:48px;height:48px;font-size:15px;background:${color.bg};color:${color.color};">${initials}</div>
-              <div>
-                <div class="alumni-name">${a['Prénom'] || ''} ${a['NOM'] || ''}</div>
-                <div class="alumni-meta">${a['Poste'] || ''}${a['Entreprise'] ? ' · ' + a['Entreprise'] : ''}</div>
-              </div>
-            </div>
-            <div class="alumni-meta">${a['Ville / Pays'] || ''}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:5px;">${promoTag}${secteurTag}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    init();
-  </script>
-</body>
-</html>
