@@ -49,7 +49,7 @@
                 <p>${a['Poste'] || ''}${a['Entreprise'] ? ' · ' + a['Entreprise'] : ''}</p>
                 <p style="margin-top:2px;">${a['Ville / Pays'] || ''}</p>
                 <div class="profile-tags">
-                  ${a['Diplomé(e)'] ? `<span class="tag tag-purple">Promo ${a['Diplomé(e)']}</span>` : ''}
+                  ${a['Diplomé(e)'] ? `<span class="tag tag-purple">Diplomé(e) ${a['Diplomé(e)']}</span>` : ''}
                   ${a['Secteur'] ? `<span class="tag tag-blue">${a['Secteur']}</span>` : ''}
                 </div>
               </div>
@@ -85,7 +85,6 @@
               ${a['Ville / Pays'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Localisation</span>${a['Ville / Pays']}</div>` : ''}
               ${a['Secteur'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Secteur</span>${a['Secteur']}</div>` : ''}
               ${a['Diplomé(e)'] ? `<div><span style="color:var(--text-secondary);width:100px;display:inline-block;">Promotion</span>${a['Diplomé(e)']}</div>` : ''}
-            </div>
           </div>
         `;
       } catch (e) {
