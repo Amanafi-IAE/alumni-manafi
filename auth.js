@@ -8,9 +8,13 @@ async function checkAuth() {
   }
   try {
     const res = await fetch(`${CONFIG.APPWRITE_ENDPOINT}/account`, {
-      headers: {
-        'X-Appwrite-Project': CONFIG.APPWRITE_PROJECT_ID,
-        'X-Appwrite-Session': sessionId,
+  headers: {
+    'X-Appwrite-Project': CONFIG.APPWRITE_PROJECT_ID,
+    'X-Appwrite-Session': sessionId,
+    'X-Appwrite-Response-Format': '1.0.0',
+  },
+  credentials: 'include',
+});
       },
     });
     if (!res.ok) {
