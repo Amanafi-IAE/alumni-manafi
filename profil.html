@@ -16,6 +16,8 @@
     </div>
   </div>
   <script>
+    let currentAlumni = null;
+
     async function init() {
       const user = await checkAuth();
       if (!user) return;
@@ -28,68 +30,114 @@
           headers: { Authorization: 'Token ' + CONFIG.BASEROW_TOKEN },
         });
         const a = await res.json();
-        const prenom = a['Prénom'] || '';
-        const nom = a['NOM'] || '';
-        const poste = a['Poste'] || '';
-        const entreprise = a['Entreprise'] || '';
-        const ville = a['Ville / Pays'] || '';
-        const secteur = a['Secteur'] || '';
-        const diplome = a['Diplomé(e)'] || '';
-        const bio = a['Bio'] || '';
-        const linkedin = a['Linkedin'] || '';
-        const initials = getInitials(prenom, nom);
-        const color = getAvatarColor(initials);
+        currentAlumni = a;
         const isOwn = user.email === a['Courriel'];
-
-        let html = '';
-        html += '<a href="annuaire.html?v=5" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;">← Retour a l\'annuaire</a>';
-        html += '<div class="card" style="margin-bottom:16px;">';
-        html += '<div class="profile-hero">';
-        html += '<div class="profile-avatar" style="background:' + color.bg + ';color:' + color.color + ';">' + initials + '</div>';
-        html += '<div class="profile-info" style="flex:1;">';
-        html += '<h1>' + prenom + ' ' + nom + '</h1>';
-        html += '<p>' + poste + (entreprise ? ' · ' + entreprise : '') + '</p>';
-        html += '<p style="margin-top:2px;">' + ville + '</p>';
-        html += '<div class="profile-tags">';
-        if (diplome) html += '<span class="tag tag-purple">Diplome(e) ' + diplome + '</span>';
-        if (secteur) html += '<span class="tag tag-blue">' + secteur + '</span>';
-        html += '</div></div></div>';
-        if (linkedin) html += '<a href="' + linkedin + '" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:8px;">🔗 Voir le profil LinkedIn</a>';
-        html += '</div>';
-        html += '<div class="card" style="margin-bottom:16px;">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
-        html += '<h3 style="font-size:15px;font-weight:600;">A propos</h3>';
-        if (isOwn) html += '<button class="btn btn-secondary btn-sm" onclick="toggleEdit()">Modifier ma bio</button>';
-        html += '</div>';
-        html += '<div id="bio-display" style="font-size:14px;color:var(--text-secondary);line-height:1.7;">' + (bio || '<em>Aucune description pour le moment.</em>') + '</div>';
-        if (isOwn) {
-          html += '<div id="bio-edit" style="display:none;margin-top:12px;">';
-          html += '<textarea id="bio-input" rows="5" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;">' + bio + '</textarea>';
-          html += '<div style="display:flex;gap:8px;margin-top:10px;">';
-          html += '<button class="btn btn-primary btn-sm" onclick="saveBio(' + a['id'] + ')">Enregistrer</button>';
-          html += '<button class="btn btn-secondary btn-sm" onclick="toggleEdit()">Annuler</button>';
-          html += '</div><div id="bio-alert"></div></div>';
-        }
-        html += '</div>';
-        html += '<div class="card">';
-        html += '<h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">Informations</h3>';
-        html += '<div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">';
-        if (entreprise) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Entreprise</span>' + entreprise + '</div>';
-        if (poste) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Poste</span>' + poste + '</div>';
-        if (ville) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Localisation</span>' + ville + '</div>';
-        if (secteur) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Secteur</span>' + secteur + '</div>';
-        if (diplome) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Diplome(e)</span>' + diplome + '</div>';
-        html += '</div></div>';
-        document.getElementById('profile-content').innerHTML = html;
+        renderProfile(a, isOwn);
       } catch (e) {
         console.error('Erreur profil:', e);
         document.getElementById('profile-content').innerHTML = '<div class="empty"><h3>Profil introuvable</h3></div>';
       }
     }
 
-    function toggleEdit() {
-      const display = document.getElementById('bio-display');
-      const edit = document.getElementById('bio-edit');
+    function renderProfile(a, isOwn) {
+      const prenom = a['Prénom'] || '';
+      const nom = a['NOM'] || '';
+      const poste = a['Poste'] || '';
+      const entreprise = a['Entreprise'] || '';
+      const ville = a['Ville / Pays'] || '';
+      const secteur = a['Secteur'] || '';
+      const diplome = a['Diplomé(e)'] || '';
+      const bio = a['Bio'] || '';
+      const linkedin = a['Linkedin'] || '';
+      const initials = getInitials(prenom, nom);
+      const color = getAvatarColor(initials);
+
+      let html = '';
+      html += '<a href="annuaire.html?v=5" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;">← Retour a l\'annuaire</a>';
+
+      // Carte principale
+      html += '<div class="card" style="margin-bottom:16px;">';
+      html += '<div class="profile-hero">';
+      html += '<div class="profile-avatar" style="background:' + color.bg + ';color:' + color.color + ';">' + initials + '</div>';
+      html += '<div class="profile-info" style="flex:1;">';
+      html += '<h1>' + prenom + ' ' + nom + '</h1>';
+      html += '<p>' + poste + (entreprise ? ' · ' + entreprise : '') + '</p>';
+      html += '<p style="margin-top:2px;">' + ville + '</p>';
+      html += '<div class="profile-tags">';
+      if (diplome) html += '<span class="tag tag-purple">Diplomé(e) ' + diplome + '</span>';
+      if (secteur) html += '<span class="tag tag-blue">' + secteur + '</span>';
+      html += '</div></div></div>';
+      if (linkedin) html += '<a href="' + linkedin + '" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:8px;">🔗 Voir le profil LinkedIn</a>';
+      html += '</div>';
+
+      // Bio
+      html += '<div class="card" style="margin-bottom:16px;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+      html += '<h3 style="font-size:15px;font-weight:600;">A propos</h3>';
+      if (isOwn) html += '<button class="btn btn-secondary btn-sm" onclick="toggleEdit(\'bio\')">Modifier</button>';
+      html += '</div>';
+      html += '<div id="bio-display" style="font-size:14px;color:var(--text-secondary);line-height:1.7;">' + (bio || '<em>Aucune description pour le moment.</em>') + '</div>';
+      if (isOwn) {
+        html += '<div id="bio-edit" style="display:none;margin-top:12px;">';
+        html += '<textarea id="bio-input" rows="5" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;">' + bio + '</textarea>';
+        html += '<div style="display:flex;gap:8px;margin-top:10px;">';
+        html += '<button class="btn btn-primary btn-sm" onclick="saveField(' + a['id'] + ', \'Bio\', \'bio-input\', \'bio\')">Enregistrer</button>';
+        html += '<button class="btn btn-secondary btn-sm" onclick="toggleEdit(\'bio\')">Annuler</button>';
+        html += '</div><div id="bio-alert"></div></div>';
+      }
+      html += '</div>';
+
+      // Informations modifiables
+      html += '<div class="card">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+      html += '<h3 style="font-size:15px;font-weight:600;">Informations</h3>';
+      if (isOwn) html += '<button class="btn btn-secondary btn-sm" onclick="toggleEdit(\'infos\')">Modifier</button>';
+      html += '</div>';
+
+      // Vue lecture
+      html += '<div id="infos-display" style="display:flex;flex-direction:column;gap:8px;font-size:13px;">';
+      if (entreprise) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Entreprise</span>' + entreprise + '</div>';
+      if (poste) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Poste</span>' + poste + '</div>';
+      if (ville) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Localisation</span>' + ville + '</div>';
+      if (secteur) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Secteur</span>' + secteur + '</div>';
+      if (diplome) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">Diplomé(e)</span>' + diplome + '</div>';
+      if (linkedin) html += '<div><span style="color:var(--text-secondary);width:110px;display:inline-block;">LinkedIn</span><a href="' + linkedin + '" target="_blank" style="color:var(--purple);">Voir profil</a></div>';
+      html += '</div>';
+
+      // Vue edition
+      if (isOwn) {
+        html += '<div id="infos-edit" style="display:none;margin-top:12px;">';
+        html += '<div style="display:flex;flex-direction:column;gap:10px;">';
+        html += '<div><label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Entreprise</label><input id="input-entreprise" type="text" value="' + entreprise + '" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;"></div>';
+        html += '<div><label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Poste</label><input id="input-poste" type="text" value="' + poste + '" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;"></div>';
+        html += '<div><label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Ville / Pays</label><input id="input-ville" type="text" value="' + ville + '" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;"></div>';
+        html += '<div><label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Secteur</label><input id="input-secteur" type="text" value="' + secteur + '" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;"></div>';
+        html += '<div><label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">LinkedIn (URL)</label><input id="input-linkedin" type="text" value="' + linkedin + '" placeholder="https://linkedin.com/in/..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;"></div>';
+        html += '</div>';
+        html += '<div style="display:flex;gap:8px;margin-top:12px;">';
+        html += '<button class="btn btn-primary btn-sm" onclick="saveInfos(' + a['id'] + ')">Enregistrer</button>';
+        html += '<button class="btn btn-secondary btn-sm" onclick="toggleEdit(\'infos\')">Annuler</button>';
+        html += '</div>';
+        html += '<div id="infos-alert"></div>';
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // RGPD
+      if (isOwn) {
+        html += '<div style="margin-top:16px;padding:12px 16px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text-secondary);border:1px solid var(--border);">';
+        html += 'En utilisant cette plateforme, vous acceptez que vos informations professionnelles soient visibles aux membres du réseau Alumni MANAFI. ';
+        html += '<a href="confidentialite.html" style="color:var(--purple);">Politique de confidentialité</a> · ';
+        html += '<a href="mailto:alumni.manafi@gmail.com" style="color:var(--purple);">Demander la suppression de mes données</a>';
+        html += '</div>';
+      }
+
+      document.getElementById('profile-content').innerHTML = html;
+    }
+
+    function toggleEdit(section) {
+      const display = document.getElementById(section + '-display');
+      const edit = document.getElementById(section + '-edit');
       if (edit.style.display === 'none') {
         display.style.display = 'none';
         edit.style.display = 'block';
@@ -99,15 +147,32 @@
       }
     }
 
-    async function saveBio(rowId) {
-      const bio = document.getElementById('bio-input').value;
-      const alertEl = document.getElementById('bio-alert');
+    async function saveField(rowId, fieldName, inputId, section) {
+      const value = document.getElementById(inputId).value;
+      const alertEl = document.getElementById(section + '-alert');
       try {
-        await baserowUpdate(CONFIG.TABLE_ALUMNI, rowId, { 'Bio': bio });
-        document.getElementById('bio-display').textContent = bio || 'Aucune description pour le moment.';
-        document.getElementById('bio-display').style.display = 'block';
-        document.getElementById('bio-edit').style.display = 'none';
-        alertEl.innerHTML = '';
+        const data = {};
+        data[fieldName] = value;
+        await baserowUpdate(CONFIG.TABLE_ALUMNI, rowId, data);
+        alertEl.innerHTML = '<div class="alert alert-success" style="margin-top:8px;">Sauvegardé !</div>';
+        setTimeout(() => window.location.reload(), 800);
+      } catch (e) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Erreur lors de la sauvegarde.</div>';
+      }
+    }
+
+    async function saveInfos(rowId) {
+      const alertEl = document.getElementById('infos-alert');
+      try {
+        await baserowUpdate(CONFIG.TABLE_ALUMNI, rowId, {
+          'Entreprise': document.getElementById('input-entreprise').value,
+          'Poste': document.getElementById('input-poste').value,
+          'Ville / Pays': document.getElementById('input-ville').value,
+          'Secteur': document.getElementById('input-secteur').value,
+          'Linkedin': document.getElementById('input-linkedin').value,
+        });
+        alertEl.innerHTML = '<div class="alert alert-success" style="margin-top:8px;">Profil mis à jour !</div>';
+        setTimeout(() => window.location.reload(), 800);
       } catch (e) {
         alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Erreur lors de la sauvegarde.</div>';
       }
