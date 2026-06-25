@@ -87,8 +87,8 @@
       try {
         const data = await baserowGet(CONFIG.TABLE_OFFRES, '');
         allOffres = (data.results || []).filter(o => {
-          const status = Array.isArray(o['Statut']) ? o['Statut'][0]?.value : o['Statut']?.value;
-          return status === 'Publiée';
+          const status = Array.isArray(o['Status']) ? o['Status'][0]?.value : o['Status']?.value;
+return status === 'Publiée';
         });
         renderOffres(allOffres);
       } catch (e) {
@@ -149,7 +149,7 @@
       const type = document.getElementById('filter-type').value;
       const filtered = allOffres.filter(o => {
         const matchQ = !q || [o['Poste'], o['Entreprise'], o['Description']].join(' ').toLowerCase().includes(q);
-        const offreType = Array.isArray(o['Type de poste']) ? o['Type de poste'][0]?.value : o['Type de poste'];
+        const offreType = Array.isArray(o['Type de poste']) ? o['Type de poste'][0]?.value : o['Type de poste']?.value;
         const matchType = !type || offreType === type;
         return matchQ && matchType;
       });
