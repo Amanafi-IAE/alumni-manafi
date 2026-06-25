@@ -11,70 +11,80 @@
 <body>
   <div id="nav-container"></div>
   <div class="container">
-    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
-      <div>
-        <h1>Offres d'emploi</h1>
-        <p>Opportunités partagées par les alumni du réseau</p>
+
+    <!-- VUE LISTE -->
+    <div id="vue-liste">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <h1>Offres d'emploi</h1>
+          <p>Opportunités partagées par les alumni du réseau</p>
+        </div>
+        <button class="btn btn-primary" onclick="toggleFormulaire()">+ Déposer une offre</button>
       </div>
-      <button class="btn btn-primary" onclick="toggleFormulaire()">+ Déposer une offre</button>
+
+      <!-- Formulaire -->
+      <div id="formulaire-offre" style="display:none;margin-bottom:24px;" class="card">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Nouvelle offre</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Titre du poste *</label>
+            <input id="offre-titre" type="text" placeholder="ex: Analyste M&A" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Entreprise *</label>
+            <input id="offre-entreprise" type="text" placeholder="ex: BNP Paribas" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Type de poste *</label>
+            <select id="offre-type" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+              <option value="">Choisir...</option>
+              <option value="CDI">CDI</option>
+              <option value="CDD">CDD</option>
+              <option value="Stage">Stage</option>
+              <option value="Alternance">Alternance</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Description *</label>
+            <textarea id="offre-description" rows="4" placeholder="Décrivez le poste, les missions, le profil recherché..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Date limite</label>
+            <input id="offre-date" type="date" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn btn-primary" onclick="soumettreOffre()">Soumettre</button>
+          <button class="btn btn-secondary" onclick="toggleFormulaire()">Annuler</button>
+        </div>
+        <div id="offre-alert"></div>
+      </div>
+
+      <div class="search-row">
+        <input class="search-input" id="search" placeholder="Rechercher par titre, entreprise..." oninput="filterOffres()" />
+        <select class="search-input" id="filter-type" onchange="filterOffres()" style="max-width:180px;">
+          <option value="">Tous les types</option>
+          <option value="CDI">CDI</option>
+          <option value="CDD">CDD</option>
+          <option value="Stage">Stage</option>
+          <option value="Alternance">Alternance</option>
+        </select>
+      </div>
+
+      <div class="grid-2" id="offres-grid">
+        <div class="loading">Chargement des offres...</div>
+      </div>
     </div>
 
-    <!-- Formulaire dépôt offre -->
-    <div id="formulaire-offre" style="display:none;" class="card" style="margin-bottom:24px;">
-      <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Nouvelle offre</h3>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div>
-          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Titre du poste *</label>
-          <input id="offre-titre" type="text" placeholder="ex: Analyste M&A" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Entreprise *</label>
-          <input id="offre-entreprise" type="text" placeholder="ex: BNP Paribas" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Type de poste *</label>
-          <select id="offre-type" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
-            <option value="">Choisir...</option>
-            <option value="CDI">CDI</option>
-            <option value="CDD">CDD</option>
-            <option value="Stage">Stage</option>
-            <option value="Alternance">Alternance</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Description *</label>
-          <textarea id="offre-description" rows="4" placeholder="Décrivez le poste, les missions, le profil recherché..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Date limite</label>
-          <input id="offre-date" type="date" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:16px;">
-        <button class="btn btn-primary" onclick="soumettreOffre()">Soumettre</button>
-        <button class="btn btn-secondary" onclick="toggleFormulaire()">Annuler</button>
-      </div>
-      <div id="offre-alert"></div>
+    <!-- VUE DETAIL -->
+    <div id="vue-detail" style="display:none;max-width:700px;margin:0 auto;">
     </div>
 
-    <div class="search-row">
-      <input class="search-input" id="search" placeholder="Rechercher par titre, entreprise..." oninput="filterOffres()" />
-      <select class="search-input" id="filter-type" onchange="filterOffres()" style="max-width:180px;">
-        <option value="">Tous les types</option>
-        <option value="CDI">CDI</option>
-        <option value="CDD">CDD</option>
-        <option value="Stage">Stage</option>
-        <option value="Alternance">Alternance</option>
-      </select>
-    </div>
-
-    <div class="grid-2" id="offres-grid">
-      <div class="loading">Chargement des offres...</div>
-    </div>
   </div>
 
   <script>
     let allOffres = [];
+    let currentUser = null;
 
     const typeColors = {
       CDI: 'tag-green', CDD: 'tag-blue', Stage: 'tag-amber', Alternance: 'tag-purple',
@@ -83,12 +93,13 @@
     async function init() {
       const user = await checkAuth();
       if (!user) return;
+      currentUser = user;
       document.getElementById('nav-container').innerHTML = renderNav('offres.html', user.email);
       try {
         const data = await baserowGet(CONFIG.TABLE_OFFRES, '');
         allOffres = (data.results || []).filter(o => {
           const status = Array.isArray(o['Status']) ? o['Status'][0]?.value : o['Status']?.value;
-return status === 'Publiée';
+          return status === 'Publiée';
         });
         renderOffres(allOffres);
       } catch (e) {
@@ -128,11 +139,10 @@ return status === 'Publiée';
             'Description': description,
             'Date': date || null,
             'Statut': 'En attente',
+            'Email de contact': currentUser.email,
           }),
         });
-
         if (!res.ok) throw new Error('Erreur');
-
         alertEl.innerHTML = '<div class="alert alert-success" style="margin-top:8px;">Offre soumise ! Elle sera publiée après validation.</div>';
         document.getElementById('offre-titre').value = '';
         document.getElementById('offre-entreprise').value = '';
@@ -163,19 +173,75 @@ return status === 'Publiée';
         return;
       }
       grid.innerHTML = list.map(o => {
-        const type = Array.isArray(o['Type de poste']) ? o['Type de poste'][0]?.value : o['Type de poste'] || '';
+        const type = Array.isArray(o['Type de poste']) ? o['Type de poste'][0]?.value : o['Type de poste']?.value || '';
         const tagClass = typeColors[type] || 'tag-purple';
         const date = o['Date'] ? new Date(o['Date']).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
-        return '<div class="card job-card">'
+        const auteur = o['Auteur de l\'offre'] || '';
+        return '<div class="card job-card" onclick="voirDetail(' + o['id'] + ')" style="cursor:pointer;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 24px rgba(83,74,183,0.13)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'">'
           + '<div><div class="job-title">' + (o['Poste'] || 'Poste non précisé') + '</div>'
-          + '<div class="job-company">' + (o['Entreprise'] || '') + '</div></div>'
+          + '<div class="job-company">' + (o['Entreprise'] || '') + (auteur ? ' · Partagé par ' + auteur : '') + '</div></div>'
           + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
           + (type ? '<span class="tag ' + tagClass + '">' + type + '</span>' : '')
           + '</div>'
-          + (o['Description'] ? '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + o['Description'].substring(0, 150) + (o['Description'].length > 150 ? '...' : '') + '</div>' : '')
-          + '<div class="job-footer"><span style="font-size:11px;color:var(--text-secondary);">' + date + '</span></div>'
+          + (o['Description'] ? '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + o['Description'].substring(0, 120) + (o['Description'].length > 120 ? '...' : '') + '</div>' : '')
+          + '<div class="job-footer"><span style="font-size:11px;color:var(--text-secondary);">' + date + '</span>'
+          + '<span style="font-size:12px;color:var(--purple);font-weight:500;">Voir l\'offre →</span></div>'
           + '</div>';
       }).join('');
+    }
+
+    function voirDetail(id) {
+      const o = allOffres.find(o => o['id'] === id);
+      if (!o) return;
+
+      const type = Array.isArray(o['Type de poste']) ? o['Type de poste'][0]?.value : o['Type de poste']?.value || '';
+      const tagClass = typeColors[type] || 'tag-purple';
+      const date = o['Date'] ? new Date(o['Date']).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+      const auteur = o['Auteur de l\'offre'] || '';
+      const email = o['Email de contact'] || '';
+
+      let html = '';
+      html += '<a onclick="retourListe()" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;cursor:pointer;">← Retour aux offres</a>';
+
+      // Carte auteur
+      if (auteur || email) {
+        html += '<div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;">';
+        const initials = auteur ? auteur.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase() : '?';
+        html += '<div class="avatar" style="width:44px;height:44px;font-size:14px;background:var(--purple-light);color:var(--purple);">' + initials + '</div>';
+        html += '<div style="flex:1;">';
+        html += '<div style="font-size:13px;font-weight:600;">' + (auteur || 'Alumni MANAFI') + '</div>';
+        html += '<div style="font-size:12px;color:var(--text-secondary);">A partagé cette offre</div>';
+        html += '</div>';
+        if (email) html += '<a href="mailto:' + email + '" class="btn btn-primary btn-sm">✉️ Contacter</a>';
+        html += '</div>';
+      }
+
+      // Détail offre
+      html += '<div class="card">';
+      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">';
+      html += '<div><h1 style="font-size:20px;font-weight:700;">' + (o['Poste'] || '') + '</h1>';
+      html += '<div style="font-size:14px;color:var(--text-secondary);margin-top:4px;">' + (o['Entreprise'] || '') + '</div></div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      if (type) html += '<span class="tag ' + tagClass + '">' + type + '</span>';
+      html += '</div></div>';
+      if (date) html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">Date limite : ' + date + '</div>';
+      html += '<div style="font-size:14px;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;">' + (o['Description'] || '') + '</div>';
+      if (email) {
+        html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">';
+        html += '<a href="mailto:' + email + '" class="btn btn-primary">✉️ Contacter l\'alumni pour postuler</a>';
+        html += '</div>';
+      }
+      html += '</div>';
+
+      document.getElementById('vue-liste').style.display = 'none';
+      document.getElementById('vue-detail').style.display = 'block';
+      document.getElementById('vue-detail').innerHTML = html;
+      window.scrollTo(0, 0);
+    }
+
+    function retourListe() {
+      document.getElementById('vue-detail').style.display = 'none';
+      document.getElementById('vue-liste').style.display = 'block';
     }
 
     window.addEventListener('load', init);
