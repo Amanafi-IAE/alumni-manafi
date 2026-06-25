@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forum — Alumni MANAFI</title>
+  <link rel="stylesheet" href="style.css?v=3" />
+  <script src="config.js?v=4"></script>
+  <script src="auth.js?v=4"></script>
+  <style>
+    .post-card { cursor:pointer; transition: transform .15s, box-shadow .15s; margin-bottom:12px; }
+    .post-card:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(83,74,183,0.13); }
+    .reponse-card { background: var(--bg); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:10px; }
+    .own-actions { display:flex; gap:8px; margin-top:8px; }
+    .btn-edit { background:none; border:none; color:var(--purple); font-size:12px; cursor:pointer; font-family:inherit; padding:0; }
+    .btn-delete { background:none; border:none; color:#A32D2D; font-size:12px; cursor:pointer; font-family:inherit; padding:0; }
+  </style>
+</head>
+<body>
+  <div id="nav-container"></div>
+  <div class="container" style="max-width:800px;">
+
+    <!-- VUE LISTE POSTS -->
+    <div id="vue-liste-posts">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <h1>Forum</h1>
+          <p>Posez vos questions, partagez vos expériences</p>
+        </div>
+        <button class="btn btn-primary" onclick="toggleNouveauPost()">+ Nouveau post</button>
+      </div>
+
+      <!-- Formulaire nouveau post -->
+      <div id="formulaire-post" style="display:none;margin-bottom:24px;" class="card">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Nouveau post</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Titre *</label>
+            <input id="post-titre" type="text" placeholder="ex: Comment préparer un entretien chez Lazard ?" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Contenu *</label>
+            <textarea id="post-contenu" rows="5" placeholder="Décrivez votre question ou partagez votre expérience..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn btn-primary" onclick="soumettrePost()">Publier</button>
+          <button class="btn btn-secondary" onclick="toggleNouveauPost()">Annuler</button>
+        </div>
+        <div id="post-alert"></div>
+      </div>
+
+      <div id="posts-list">
+        <div class="loading">Chargement du forum...</div>
+      </div>
+    </div>
+
+    <!-- VUE DETAIL POST -->
+    <div id="vue-detail-post" style="display:none;"></div>
+
+  </div>
+
+  <script>
+    let allPosts = [];
+    let currentUser = null;
+
+    async function init() {
+      const user = await checkAuth();
+      if (!user) return;
+      currentUser = user;
+      document.getElementById('nav-container').innerHTML = renderNav('forum.html', user.email);
+      await chargerPosts();
+    }
+
+    async function chargerPosts() {
+      try {
+        const data = await baserowGet(CONFIG.TABLE_FORUM, '&order_by=-Date');
+        allPosts = data.results || [];
+        renderPosts();
+      } catch (e) {
+        document.getElementById('posts-list').innerHTML = '<div class="empty"><h3>Erreur de chargement</h3></div>';
+      }
+    }
+
+    function renderPosts() {
+      const list = document.getElementById('posts-list');
+      if (!allPosts.length) {
+        list.innerHTML = '<div class="empty"><h3>Aucun post pour le moment</h3><p>Soyez le premier à poster !</p></div>';
+        return;
+      }
+      list.innerHTML = allPosts.map(p => {
+        const initials = (p['Auteur'] || '?').substring(0, 2).toUpperCase();
+        const color = getAvatarColor(p['Auteur'] || '');
+        const date = p['Date'] ? new Date(p['Date']).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+        const isOwn = currentUser.email === p['Email auteur'];
+        return '<div class="card post-card" onclick="voirPost(' + p['id'] + ')">'
+          + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+          + '<div class="avatar" style="width:36px;height:36px;font-size:12px;background:' + color.bg + ';color:' + color.color + ';">' + initials + '</div>'
+          + '<div><div style="font-size:13px;font-weight:500;">' + (p['Auteur'] || 'Anonyme') + '</div>'
+          + '<div style="font-size:11px;color:var(--text-secondary);">' + date + '</div></div>'
+          + '</div>'
+          + '<div style="font-size:15px;font-weight:600;margin-bottom:6px;">' + (p['Titre'] || '') + '</div>'
+          + '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + (p['Contenu'] || '').substring(0, 150) + (p['Contenu'] && p['Contenu'].length > 150 ? '...' : '') + '</div>'
+          + '<div style="font-size:12px;color:var(--purple);font-weight:500;margin-top:10px;">Voir le post →</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    function toggleNouveauPost() {
+      const f = document.getElementById('formulaire-post');
+      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function soumettrePost() {
+      const titre = document.getElementById('post-titre').value.trim();
+      const contenu = document.getElementById('post-contenu').value.trim();
+      const alertEl = document.getElementById('post-alert');
+
+      if (!titre || !contenu) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Veuillez remplir tous les champs.</div>';
+        return;
+      }
+
+      try {
+        const alumni = await trouverAlumni(currentUser.email);
+        const auteur = alumni ? (alumni['Prénom'] + ' ' + alumni['NOM']) : currentUser.email;
+
+        await fetch(CONFIG.BASEROW_URL + '/' + CONFIG.TABLE_FORUM + '/?user_field_names=true', {
+          method: 'POST',
+          headers: { Authorization: 'Token ' + CONFIG.BASEROW_TOKEN, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 'Titre': titre, 'Contenu': contenu, 'Auteur': auteur, 'Email auteur': currentUser.email, 'Date': new Date().toISOString().split('T')[0] }),
+        });
+
+        document.getElementById('post-titre').value = '';
+        document.getElementById('post-contenu').value = '';
+        document.getElementById('formulaire-post').style.display = 'none';
+        await chargerPosts();
+      } catch (e) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Erreur lors de la publication.</div>';
+      }
+    }
+
+    async function trouverAlumni(email) {
+      try {
+        const data = await baserowGet(CONFIG.TABLE_ALUMNI, '&filter__Courriel__equal=' + email);
+        return data.results && data.results[0] ? data.results[0] : null;
+      } catch { return null; }
+    }
+
+    async function voirPost(id) {
+      const post = allPosts.find(p => p['id'] === id);
+      if (!post) return;
+
+      const reponsesData = await baserowGet(CONFIG.TABLE_REPONSES, '&filter__Post+ID__equal=' + id + '&order_by=Date');
+      const reponses = reponsesData.results || [];
+
+      const initials = (post['Auteur'] || '?').substring(0, 2).toUpperCase();
+      const color = getAvatarColor(post['Auteur'] || '');
+      const date = post['Date'] ? new Date(post['Date']).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+      const isOwnPost = currentUser.email === post['Email auteur'];
+
+      let html = '<a onclick="retourPosts()" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;cursor:pointer;">← Retour au forum</a>';
+
+      // Post principal
+      html += '<div class="card" style="margin-bottom:16px;">';
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
+      html += '<div class="avatar" style="width:40px;height:40px;font-size:13px;background:' + color.bg + ';color:' + color.color + ';">' + initials + '</div>';
+      html += '<div><div style="font-size:13px;font-weight:500;">' + (post['Auteur'] || 'Anonyme') + '</div><div style="font-size:11px;color:var(--text-secondary);">' + date + '</div></div>';
+      html += '</div>';
+      html += '<h2 style="font-size:18px;font-weight:700;margin-bottom:12px;">' + (post['Titre'] || '') + '</h2>';
+      html += '<div style="font-size:14px;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;">' + (post['Contenu'] || '') + '</div>';
+      if (isOwnPost) {
+        html += '<div class="own-actions">';
+        html += '<button class="btn-edit" onclick="modifierPost(' + post['id'] + ')">✏️ Modifier</button>';
+        html += '<button class="btn-delete" onclick="supprimerPost(' + post['id'] + ')">🗑️ Supprimer</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // Réponses
+      html += '<div style="margin-bottom:16px;">';
+      html += '<h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">' + reponses.length + ' réponse' + (reponses.length > 1 ? 's' : '') + '</h3>';
+      if (reponses.length) {
+        html += reponses.map(r => {
+          const ri = (r['Auteur'] || '?').substring(0, 2).toUpperCase();
+          const rc = getAvatarColor(r['Auteur'] || '');
+          const rd = r['Date'] ? new Date(r['Date']).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+          const isOwnR = currentUser.email === r['Email auteur'];
+          return '<div class="reponse-card" id="reponse-' + r['id'] + '">'
+            + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+            + '<div class="avatar" style="width:30px;height:30px;font-size:11px;background:' + rc.bg + ';color:' + rc.color + ';">' + ri + '</div>'
+            + '<div><div style="font-size:12px;font-weight:500;">' + (r['Auteur'] || 'Anonyme') + '</div><div style="font-size:11px;color:var(--text-secondary);">' + rd + '</div></div>'
+            + '</div>'
+            + '<div id="reponse-texte-' + r['id'] + '" style="font-size:13px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;">' + (r['Contenu'] || '') + '</div>'
+            + (isOwnR ? '<div class="own-actions"><button class="btn-edit" onclick="modifierReponse(' + r['id'] + ')">✏️ Modifier</button><button class="btn-delete" onclick="supprimerReponse(' + r['id'] + ',' + post['id'] + ')">🗑️ Supprimer</button></div>' : '')
+            + '</div>';
+        }).join('');
+      } else {
+        html += '<div style="font-size:13px;color:var(--text-secondary);font-style:italic;">Aucune réponse pour le moment. Soyez le premier !</div>';
+      }
+      html += '</div>';
+
+      // Formulaire réponse
+      html += '<div class="card">';
+      html += '<h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Votre réponse</h3>';
+      html += '<textarea id="reponse-contenu" rows="4" placeholder="Partagez votre expérience ou répondez à la question..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>';
+      html += '<div style="margin-top:10px;">';
+      html += '<button class="btn btn-primary btn-sm" onclick="soumettreReponse(' + post['id'] + ')">Répondre</button>';
+      html += '</div>';
+      html += '<div id="reponse-alert"></div>';
+      html += '</div>';
+
+      document.getElementById('vue-liste-posts').style.display = 'none';
+      document.getElementById('vue-detail-post').style.display = 'block';
+      document.getElementById('vue-detail-post').innerHTML = html;
+      window.scrollTo(0, 0);
+    }
+
+    async function soumettreReponse(postId) {
+      const contenu = document.getElementById('reponse-contenu').value.trim();
+      const alertEl = document.getElementById('reponse-alert');
+      if (!contenu) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Veuillez écrire une réponse.</div>';
+        return;
+      }
+      try {
+        const alumni = await trouverAlumni(currentUser.email);
+        const auteur = alumni ? (alumni['Prénom'] + ' ' + alumni['NOM']) : currentUser.email;
+        await fetch(CONFIG.BASEROW_URL + '/' + CONFIG.TABLE_REPONSES + '/?user_field_names=true', {
+          method: 'POST',
+          headers: { Authorization: 'Token ' + CONFIG.BASEROW_TOKEN, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 'Contenu': contenu, 'Auteur': auteur, 'Email auteur': currentUser.email, 'Date': new Date().toISOString().split('T')[0], 'Post ID': postId }),
+        });
+        await voirPost(postId);
+      } catch (e) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Erreur lors de la réponse.</div>';
+      }
+    }
+
+    async function modifierPost(postId) {
+      const post = allPosts.find(p => p['id'] === postId);
+      const newTitre = prompt('Modifier le titre :', post['Titre']);
+      if (newTitre === null) return;
+      const newContenu = prompt('Modifier le contenu :', post['Contenu']);
+      if (newContenu === null) return;
+      try {
+        await baserowUpdate(CONFIG.TABLE_FORUM, postId, { 'Titre': newTitre, 'Contenu': newContenu });
+        await chargerPosts();
+        await voirPost(postId);
+      } catch (e) { alert('Erreur lors de la modification.'); }
+    }
+
+    async function supprimerPost(postId) {
+      if (!confirm('Supprimer ce post ? Cette action est irréversible.')) return;
+      try {
+        await fetch(CONFIG.BASEROW_URL + '/' + CONFIG.TABLE_FORUM + '/' + postId + '/', {
+          method: 'DELETE',
+          headers: { Authorization: 'Token ' + CONFIG.BASEROW_TOKEN },
+        });
+        await chargerPosts();
+        retourPosts();
+      } catch (e) { alert('Erreur lors de la suppression.'); }
+    }
+
+    async function modifierReponse(reponseId) {
+      const texteEl = document.getElementById('reponse-texte-' + reponseId);
+      const ancienTexte = texteEl.textContent;
+      const newContenu = prompt('Modifier la réponse :', ancienTexte);
+      if (newContenu === null) return;
+      try {
+        await baserowUpdate(CONFIG.TABLE_REPONSES, reponseId, { 'Contenu': newContenu });
+        texteEl.textContent = newContenu;
+      } catch (e) { alert('Erreur lors de la modification.'); }
+    }
+
+    async function supprimerReponse(reponseId, postId) {
+      if (!confirm('Supprimer cette réponse ?')) return;
+      try {
+        await fetch(CONFIG.BASEROW_URL + '/' + CONFIG.TABLE_REPONSES + '/' + reponseId + '/', {
+          method: 'DELETE',
+          headers: { Authorization: 'Token ' + CONFIG.BASEROW_TOKEN },
+        });
+        await voirPost(postId);
+      } catch (e) { alert('Erreur lors de la suppression.'); }
+    }
+
+    function retourPosts() {
+      document.getElementById('vue-detail-post').style.display = 'none';
+      document.getElementById('vue-liste-posts').style.display = 'block';
+    }
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
