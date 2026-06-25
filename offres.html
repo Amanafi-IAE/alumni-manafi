@@ -212,8 +212,6 @@
         html += '<div style="font-size:13px;font-weight:600;">' + (auteur || 'Alumni MANAFI') + '</div>';
         html += '<div style="font-size:12px;color:var(--text-secondary);">A partagé cette offre</div>';
         html += '</div>';
-        if (email) html += '<a href="mailto:' + email + '" class="btn btn-primary btn-sm">✉️ Contacter</a>';
-        html += '</div>';
       }
 
       // Détail offre
@@ -228,7 +226,7 @@
       html += '<div style="font-size:14px;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;">' + (o['Description'] || '') + '</div>';
       if (email) {
         html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">';
-        html += '<a href="mailto:' + email + '" class="btn btn-primary">✉️ Contacter l\'alumni pour postuler</a>';
+        html += '<a href="mailto:' + email + '" class="btn btn-primary"> Contacter l\'alumni pour postuler</a>';
         html += '</div>';
       }
       html += '</div>';
