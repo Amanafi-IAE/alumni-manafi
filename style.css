@@ -19,7 +19,8 @@
 html { font-size: 16px; }
 body {
   font-family: 'Syne', system-ui, sans-serif;
-  background: var(--bg);
+  background: linear-gradient(135deg, #B8D4E8 0%, #C5DED8 40%, #D4E8E0 70%, #B8CCE4 100%);
+  background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
   line-height: 1.6;
