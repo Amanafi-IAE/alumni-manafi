@@ -227,7 +227,7 @@ if (auteur || email) {
       html += '<div style="font-size:14px;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;">' + (o['Description'] || '') + '</div>';
       if (email) {
         html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">';
-        html += '<a href="mailto:' + email + '" class="btn btn-primary"> Contacter l\'alumni pour postuler</a>';
+        html += '<div style="font-size:13px;font-weight:500;">Pour postuler, contactez : <span style="color:var(--purple);">' + email + '</span></div>';
         html += '</div>';
       }
       html += '</div>';
