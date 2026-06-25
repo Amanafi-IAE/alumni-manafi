@@ -41,6 +41,8 @@ function renderNav(currentPage, userEmail) {
     { href: 'annuaire.html', label: 'Annuaire' },
     { href: 'offres.html', label: 'Offres' },
     { href: 'evenements.html', label: 'Événements' },
+    { href: 'promotions.html', label: 'Promotions' },
+    { href: 'forum.html', label: 'Forum' },
   ];
   const initials = (userEmail || '??').substring(0, 2).toUpperCase();
   return `
