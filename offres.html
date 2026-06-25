@@ -203,16 +203,17 @@
       let html = '';
       html += '<a onclick="retourListe()" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;cursor:pointer;">← Retour aux offres</a>';
 
-      // Carte auteur
-      if (auteur || email) {
-        html += '<div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;">';
-        const initials = auteur ? auteur.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase() : '?';
-        html += '<div class="avatar" style="width:44px;height:44px;font-size:14px;background:var(--purple-light);color:var(--purple);">' + initials + '</div>';
-        html += '<div style="flex:1;">';
-        html += '<div style="font-size:13px;font-weight:600;">' + (auteur || 'Alumni MANAFI') + '</div>';
-        html += '<div style="font-size:12px;color:var(--text-secondary);">A partagé cette offre</div>';
-        html += '</div>';
-      }
+     // Carte auteur
+if (auteur || email) {
+  html += '<div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;">';
+  const initials = auteur ? auteur.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase() : '?';
+  html += '<div class="avatar" style="width:44px;height:44px;font-size:14px;background:var(--purple-light);color:var(--purple);">' + initials + '</div>';
+  html += '<div style="flex:1;">';
+  html += '<div style="font-size:13px;font-weight:600;">' + (auteur || 'Alumni MANAFI') + '</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);">A partagé cette offre</div>';
+  html += '</div>';
+  html += '</div>';
+}
 
       // Détail offre
       html += '<div class="card">';
