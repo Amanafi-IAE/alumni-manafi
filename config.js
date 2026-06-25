@@ -12,6 +12,6 @@ const CONFIG = {
 
   // Contact
   EMAIL_RGPD: 'alumni.manafi@gmail.com',
-  NOM_MASTER: 'Master Finance — Management Financier',
-  NOM_ECOLE: 'Université Paris 1 Panthéon-Sorbonne — IAE Paris',
+  NOM_MASTER: 'Master Finance parcours Management Financier',
+  NOM_ECOLE: 'Université Paris 1 Panthéon-Sorbonne - IAE Paris',
 };
