@@ -36,7 +36,7 @@
       try {
         const [alumniData, promoData] = await Promise.all([
           baserowGet(CONFIG.TABLE_ALUMNI, ''),
-          baserowGet(CONFIG.TABLE_PROMOTIONS, '&order_by=Numero'),
+          baserowGet(CONFIG.TABLE_PROMOTIONS, ''),
         ]);
         allAlumni = (alumniData.results || []).filter(a => {
           const status = Array.isArray(a['Status']) ? a['Status'][0]?.value : a['Status']?.value;
