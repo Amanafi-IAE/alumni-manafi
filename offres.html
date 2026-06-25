@@ -4,24 +4,61 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Offres — Alumni MANAFI</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
+  <link rel="stylesheet" href="style.css?v=3" />
+  <script src="config.js?v=3"></script>
+  <script src="auth.js?v=3"></script>
 </head>
 <body>
   <div id="nav-container"></div>
-
   <div class="container">
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
       <div>
         <h1>Offres d'emploi</h1>
         <p>Opportunités partagées par les alumni du réseau</p>
       </div>
-      <a href="https://tally.so" target="_blank" class="btn btn-primary">+ Déposer une offre</a>
+      <button class="btn btn-primary" onclick="toggleFormulaire()">+ Déposer une offre</button>
+    </div>
+
+    <!-- Formulaire dépôt offre -->
+    <div id="formulaire-offre" style="display:none;" class="card" style="margin-bottom:24px;">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Nouvelle offre</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Titre du poste *</label>
+          <input id="offre-titre" type="text" placeholder="ex: Analyste M&A" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Entreprise *</label>
+          <input id="offre-entreprise" type="text" placeholder="ex: BNP Paribas" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Type de poste *</label>
+          <select id="offre-type" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+            <option value="">Choisir...</option>
+            <option value="CDI">CDI</option>
+            <option value="CDD">CDD</option>
+            <option value="Stage">Stage</option>
+            <option value="Alternance">Alternance</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Description *</label>
+          <textarea id="offre-description" rows="4" placeholder="Décrivez le poste, les missions, le profil recherché..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px;">Date limite</label>
+          <input id="offre-date" type="date" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="btn btn-primary" onclick="soumettreOffre()">Soumettre</button>
+        <button class="btn btn-secondary" onclick="toggleFormulaire()">Annuler</button>
+      </div>
+      <div id="offre-alert"></div>
     </div>
 
     <div class="search-row">
-      <input class="search-input" id="search" placeholder="Rechercher par titre, entreprise, secteur…" oninput="filterOffres()" />
+      <input class="search-input" id="search" placeholder="Rechercher par titre, entreprise..." oninput="filterOffres()" />
       <select class="search-input" id="filter-type" onchange="filterOffres()" style="max-width:180px;">
         <option value="">Tous les types</option>
         <option value="CDI">CDI</option>
@@ -32,7 +69,7 @@
     </div>
 
     <div class="grid-2" id="offres-grid">
-      <div class="loading">Chargement des offres…</div>
+      <div class="loading">Chargement des offres...</div>
     </div>
   </div>
 
@@ -46,15 +83,64 @@
     async function init() {
       const user = await checkAuth();
       if (!user) return;
-
       document.getElementById('nav-container').innerHTML = renderNav('offres.html', user.email);
-
       try {
-        const data = await baserowGet(CONFIG.TABLE_OFFRES, '&filter__Statut__equal=Publiée');
-        allOffres = data.results || [];
+        const data = await baserowGet(CONFIG.TABLE_OFFRES, '');
+        allOffres = (data.results || []).filter(o => {
+          const status = Array.isArray(o['Statut']) ? o['Statut'][0]?.value : o['Statut']?.value;
+          return status === 'Publiée';
+        });
         renderOffres(allOffres);
       } catch (e) {
         document.getElementById('offres-grid').innerHTML = '<div class="empty"><h3>Erreur de chargement</h3></div>';
+      }
+    }
+
+    function toggleFormulaire() {
+      const f = document.getElementById('formulaire-offre');
+      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function soumettreOffre() {
+      const titre = document.getElementById('offre-titre').value.trim();
+      const entreprise = document.getElementById('offre-entreprise').value.trim();
+      const type = document.getElementById('offre-type').value;
+      const description = document.getElementById('offre-description').value.trim();
+      const date = document.getElementById('offre-date').value;
+      const alertEl = document.getElementById('offre-alert');
+
+      if (!titre || !entreprise || !type || !description) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Veuillez remplir tous les champs obligatoires.</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(CONFIG.BASEROW_URL + '/' + CONFIG.TABLE_OFFRES + '/?user_field_names=true', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Token ' + CONFIG.BASEROW_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            'Poste': titre,
+            'Entreprise': entreprise,
+            'Type de poste': type,
+            'Description': description,
+            'Date': date || null,
+            'Statut': 'En attente',
+          }),
+        });
+
+        if (!res.ok) throw new Error('Erreur');
+
+        alertEl.innerHTML = '<div class="alert alert-success" style="margin-top:8px;">Offre soumise ! Elle sera publiée après validation.</div>';
+        document.getElementById('offre-titre').value = '';
+        document.getElementById('offre-entreprise').value = '';
+        document.getElementById('offre-type').value = '';
+        document.getElementById('offre-description').value = '';
+        document.getElementById('offre-date').value = '';
+      } catch (e) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-top:8px;">Erreur lors de la soumission.</div>';
       }
     }
 
@@ -63,7 +149,8 @@
       const type = document.getElementById('filter-type').value;
       const filtered = allOffres.filter(o => {
         const matchQ = !q || [o['Poste'], o['Entreprise'], o['Description']].join(' ').toLowerCase().includes(q);
-        const matchType = !type || o['Type de poste'] === type;
+        const offreType = Array.isArray(o['Type de poste']) ? o['Type de poste'][0]?.value : o['Type de poste'];
+        const matchType = !type || offreType === type;
         return matchQ && matchType;
       });
       renderOffres(filtered);
@@ -76,28 +163,22 @@
         return;
       }
       grid.innerHTML = list.map(o => {
-        const type = o['Type de poste'] || '';
+        const type = Array.isArray(o['Type de poste']) ? o['Type de poste'][0]?.value : o['Type de poste'] || '';
         const tagClass = typeColors[type] || 'tag-purple';
         const date = o['Date'] ? new Date(o['Date']).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
-        return `
-          <div class="card job-card">
-            <div>
-              <div class="job-title">${o['Poste'] || 'Poste non précisé'}</div>
-              <div class="job-company">${o['Entreprise'] || ''}</div>
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;">
-              ${type ? `<span class="tag ${tagClass}">${type}</span>` : ''}
-            </div>
-            ${o['Description'] ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">${o['Description'].substring(0, 150)}${o['Description'].length > 150 ? '…' : ''}</div>` : ''}
-            <div class="job-footer">
-              <span style="font-size:11px;color:var(--text-secondary);">${date}</span>
-            </div>
-          </div>
-        `;
+        return '<div class="card job-card">'
+          + '<div><div class="job-title">' + (o['Poste'] || 'Poste non précisé') + '</div>'
+          + '<div class="job-company">' + (o['Entreprise'] || '') + '</div></div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+          + (type ? '<span class="tag ' + tagClass + '">' + type + '</span>' : '')
+          + '</div>'
+          + (o['Description'] ? '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + o['Description'].substring(0, 150) + (o['Description'].length > 150 ? '...' : '') + '</div>' : '')
+          + '<div class="job-footer"><span style="font-size:11px;color:var(--text-secondary);">' + date + '</span></div>'
+          + '</div>';
       }).join('');
     }
 
-    init();
+    window.addEventListener('load', init);
   </script>
 </body>
 </html>
