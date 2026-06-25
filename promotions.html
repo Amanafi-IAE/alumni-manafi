@@ -7,20 +7,13 @@
   <link rel="stylesheet" href="style.css?v=3" />
   <script src="config.js?v=4"></script>
   <script src="auth.js?v=4"></script>
-  <style>
-    .promo-card { cursor:pointer; transition: transform .15s, box-shadow .15s; }
-    .promo-card:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(83,74,183,0.13); }
-    .promo-photo { width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:12px; background:var(--purple-light); display:flex; align-items:center; justify-content:center; color:var(--purple); font-size:32px; font-weight:700; }
-    .alumni-mini { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--border); }
-    .alumni-mini:last-child { border-bottom:none; }
-  </style>
 </head>
 <body>
   <div id="nav-container"></div>
   <div class="container">
     <div class="page-header">
       <h1>Promotions</h1>
-      <p>Retrouvez les alumni par année de diplomation</p>
+      <p>Toutes les promotions du Master Finance — Management Financier</p>
     </div>
 
     <div id="vue-liste-promos">
@@ -43,13 +36,13 @@
       try {
         const [alumniData, promoData] = await Promise.all([
           baserowGet(CONFIG.TABLE_ALUMNI, ''),
-          baserowGet(CONFIG.TABLE_PROMOTIONS, ''),
+          baserowGet(CONFIG.TABLE_PROMOTIONS, '&order_by=Numero'),
         ]);
         allAlumni = (alumniData.results || []).filter(a => {
           const status = Array.isArray(a['Status']) ? a['Status'][0]?.value : a['Status']?.value;
           return a['RGPD'] === true && status === 'Actif';
         });
-        allPromos = (promoData.results || []).sort((a, b) => b['Année'] - a['Année']);
+        allPromos = (promoData.results || []).sort((a, b) => b['Numéro'] - a['Numéro']);
         renderPromos();
       } catch (e) {
         document.getElementById('promos-grid').innerHTML = '<div class="empty"><h3>Erreur de chargement</h3></div>';
@@ -58,38 +51,43 @@
 
     function renderPromos() {
       const grid = document.getElementById('promos-grid');
-      const annees = [...new Set(allAlumni.map(a => a['Diplomé(e)']).filter(Boolean))].sort((a,b) => b-a);
-
-      if (!annees.length) {
+      if (!allPromos.length) {
         grid.innerHTML = '<div class="empty"><h3>Aucune promotion trouvée</h3></div>';
         return;
       }
+      grid.innerHTML = allPromos.map(promo => {
+        const anneeD = promo['Année de diplomation'];
+        const membres = allAlumni.filter(a => String(a['Diplomé(e)']) === String(anneeD));
+        const photo = promo['Photos'] || '';
+        const numero = promo['Numéro'] || '';
+        const annees = promo['Années'] || '';
 
-      grid.innerHTML = annees.map(annee => {
-        const promo = allPromos.find(p => String(p['Année']) === String(annee));
-        const nbAlumni = allAlumni.filter(a => String(a['Diplomé(e)']) === String(annee)).length;
-        const photo = promo && promo['Photos'] ? promo['Photos'] : null;
-
-        let html = '<div class="card promo-card" onclick="voirPromo(\'' + annee + '\')">';
+        let html = '<div class="card promo-card" onclick="voirPromo(' + promo['id'] + ')" style="cursor:pointer;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 24px rgba(83,74,183,0.13)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'">';
         if (photo) {
           html += '<img src="' + photo + '" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px;" />';
         } else {
-          html += '<div style="width:100%;height:180px;background:var(--purple-light);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:var(--purple);">' + annee + '</div>';
+          html += '<div style="width:100%;height:180px;background:var(--purple-light);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:var(--purple);">' + numero + '</div>';
         }
-        html += '<div style="font-size:16px;font-weight:600;">Promotion ' + annee + '</div>';
-        html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + nbAlumni + ' alumni</div>';
-        if (promo && promo['Description']) {
-          html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + promo['Description'].substring(0, 100) + '...</div>';
+        html += '<div style="font-size:16px;font-weight:600;">Promotion ' + numero + '</div>';
+        if (annees) html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">' + annees + '</div>';
+        html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">' + membres.length + ' alumni</div>';
+        if (promo['Description']) {
+          html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' + promo['Description'].substring(0, 100) + (promo['Description'].length > 100 ? '...' : '') + '</div>';
         }
         html += '</div>';
         return html;
       }).join('');
     }
 
-    function voirPromo(annee) {
-      const promo = allPromos.find(p => String(p['Année']) === String(annee));
-      const membres = allAlumni.filter(a => String(a['Diplomé(e)']) === String(annee));
-      const photo = promo && promo['Photos'] ? promo['Photos'] : null;
+    function voirPromo(id) {
+      const promo = allPromos.find(p => p['id'] === id);
+      if (!promo) return;
+
+      const anneeD = promo['Année de diplomation'];
+      const membres = allAlumni.filter(a => String(a['Diplomé(e)']) === String(anneeD));
+      const photo = promo['Photos'] || '';
+      const numero = promo['Numéro'] || '';
+      const annees = promo['Années'] || '';
 
       let html = '<a onclick="retourPromos()" style="font-size:13px;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:20px;cursor:pointer;">← Retour aux promotions</a>';
 
@@ -98,27 +96,36 @@
       }
 
       html += '<div class="card" style="margin-bottom:16px;">';
-      html += '<h1 style="font-size:22px;font-weight:700;">Promotion ' + annee + '</h1>';
-      html += '<p style="font-size:14px;color:var(--text-secondary);margin-top:4px;">' + membres.length + ' alumni</p>';
-      if (promo && promo['Description']) {
+      html += '<h1 style="font-size:22px;font-weight:700;">Promotion ' + numero + '</h1>';
+      if (annees) html += '<div style="font-size:14px;color:var(--text-secondary);margin-top:4px;">' + annees + '</div>';
+      html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + membres.length + ' alumni</div>';
+      if (promo['Description']) {
         html += '<p style="font-size:14px;color:var(--text-secondary);margin-top:12px;line-height:1.7;">' + promo['Description'] + '</p>';
       }
       html += '</div>';
 
-      html += '<div class="card">';
-      html += '<h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Membres de la promotion</h3>';
-      html += membres.map(a => {
-        const initials = getInitials(a['Prénom'], a['NOM']);
-        const color = getAvatarColor(initials);
-        return '<div class="alumni-mini" onclick="window.location.href=\'profil.html?id=' + a['id'] + '\'" style="cursor:pointer;">'
-          + '<div class="avatar" style="background:' + color.bg + ';color:' + color.color + ';">' + initials + '</div>'
-          + '<div>'
-          + '<div style="font-size:13px;font-weight:500;">' + (a['Prénom'] || '') + ' ' + (a['NOM'] || '') + '</div>'
-          + '<div style="font-size:12px;color:var(--text-secondary);">' + (a['Poste'] || '') + (a['Entreprise'] ? ' · ' + a['Entreprise'] : '') + '</div>'
-          + '</div>'
-          + '</div>';
-      }).join('');
-      html += '</div>';
+      if (membres.length) {
+        html += '<div class="card">';
+        html += '<h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Membres de la promotion</h3>';
+        html += membres.map(a => {
+          const initials = getInitials(a['Prénom'], a['NOM']);
+          const color = getAvatarColor(initials);
+          const photo = a['Photo'] || '';
+          const avatarHtml = photo
+            ? '<img src="' + photo + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" />'
+            : '<div class="avatar" style="background:' + color.bg + ';color:' + color.color + ';">' + initials + '</div>';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;" onclick="window.location.href=\'profil.html?id=' + a['id'] + '\'">'
+            + avatarHtml
+            + '<div>'
+            + '<div style="font-size:13px;font-weight:500;">' + (a['Prénom'] || '') + ' ' + (a['NOM'] || '') + '</div>'
+            + '<div style="font-size:12px;color:var(--text-secondary);">' + (a['Poste'] || '') + (a['Entreprise'] ? ' · ' + a['Entreprise'] : '') + '</div>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+        html += '</div>';
+      } else {
+        html += '<div class="card"><div style="font-size:13px;color:var(--text-secondary);font-style:italic;text-align:center;padding:20px;">Aucun alumni enregistré pour cette promotion pour le moment.</div></div>';
+      }
 
       document.getElementById('vue-liste-promos').style.display = 'none';
       document.getElementById('vue-detail-promo').style.display = 'block';
