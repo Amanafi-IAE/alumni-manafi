@@ -63,11 +63,17 @@ function renderNav(currentPage, userEmail) {
 }
 
 async function baserowGet(tableId, filters = '') {
-  const url = `${CONFIG.BASEROW_URL}/${tableId}/?user_field_names=true&size=200${filters}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Token ${CONFIG.BASEROW_TOKEN}` },
-  });
-  return res.json();
+  let allResults = [];
+  let url = `${CONFIG.BASEROW_URL}/${tableId}/?user_field_names=true&size=200${filters}`;
+  while (url) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Token ${CONFIG.BASEROW_TOKEN}` },
+    });
+    const data = await res.json();
+    allResults = allResults.concat(data.results || []);
+    url = data.next;
+  }
+  return { results: allResults };
 }
 
 async function baserowUpdate(tableId, rowId, data) {
