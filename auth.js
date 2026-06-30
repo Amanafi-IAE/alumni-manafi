@@ -71,7 +71,7 @@ async function baserowGet(tableId, filters = '') {
     });
     const data = await res.json();
     allResults = allResults.concat(data.results || []);
-    url = data.next;
+    url = data.next ? data.next.replace('http://', 'https://') : null;
   }
   return { results: allResults };
 }
