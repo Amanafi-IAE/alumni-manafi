@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Connexion — Alumni MANAFI</title>
+  <title>Connexion Alumni ManaFi</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="config.js"></script>
@@ -17,8 +17,8 @@
             <span style="color:white;font-size:20px;font-weight:700;">A</span>
           </div>
         </div>
-        <h1>Alumni MANAFI</h1>
-        <p>Master Finance — Management Financier<br>IAE Paris · Paris 1 Panthéon-Sorbonne</p>
+        <h1>Alumni ManaFi</h1>
+        <p>Master Finance parcours Management Financier<br>IAE Paris · Paris 1 Panthéon-Sorbonne</p>
       </div>
 
       <div id="alert-box"></div>
@@ -89,7 +89,7 @@
         localStorage.setItem('appwrite_session', data.$id);
         localStorage.setItem('appwrite_user_email', email);
 
-        window.location.href = 'annuaire.html';
+        window.location.href = 'consentement.html';
 
       } catch (err) {
         alertBox.innerHTML = `<div class="alert alert-error">Email ou mot de passe incorrect. Contactez alumni.manafi@gmail.com si besoin.</div>`;
