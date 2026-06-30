@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consentement — Alumni MANAFI</title>
+  <link rel="stylesheet" href="style.css?v=3" />
+  <script src="config.js?v=4"></script>
+  <script src="auth.js?v=4"></script>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="card login-card" style="max-width:520px;">
+      <div id="content">
+        <div class="loading">Vérification de votre compte...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let alumniRow = null;
+
+    async function init() {
+      const user = await checkAuth();
+      if (!user) return;
+
+      try {
+        const data = await baserowGet(CONFIG.TABLE_ALUMNI, '&filter__Courriel__equal=' + encodeURIComponent(user.email));
+        const results = data.results || [];
+
+        if (!results.length) {
+          document.getElementById('content').innerHTML = '<div class="empty"><h3>Profil introuvable</h3><p>Contactez ' + CONFIG.EMAIL_RGPD + '</p></div>';
+          return;
+        }
+
+        alumniRow = results[0];
+
+        if (alumniRow['RGPD'] === true) {
+          window.location.href = 'annuaire.html';
+          return;
+        }
+
+        afficherConsentement();
+      } catch (e) {
+        document.getElementById('content').innerHTML = '<div class="empty"><h3>Erreur</h3><p>Veuillez réessayer.</p></div>';
+      }
+    }
+
+    function afficherConsentement() {
+      let html = '<div class="login-logo">';
+      html += '<h1>Bienvenue ' + (alumniRow['Prénom'] || '') + ' !</h1>';
+      html += '<p>Avant d\'accéder au réseau, merci de lire et accepter les conditions ci-dessous.</p>';
+      html += '</div>';
+
+      html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;line-height:1.7;color:var(--text-secondary);max-height:280px;overflow-y:auto;margin-bottom:20px;">';
+      html += '<strong style="color:var(--text);">Consentement RGPD</strong><br><br>';
+      html += 'En activant mon compte, j\'accepte que mes informations professionnelles (nom, prénom, promotion, entreprise, poste, ville, secteur) soient visibles aux autres membres authentifiés du réseau Alumni MANAFI (Master Finance — Management Financier, IAE Paris).<br><br>';
+      html += 'Mes données sont hébergées en Union Européenne (Baserow Cloud, Appwrite Frankfurt) et conservées pendant 5 ans après l\'obtention de mon diplôme, ou jusqu\'à ma demande de suppression.<br><br>';
+      html += 'Je peux à tout moment :<br>';
+      html += '• Modifier ma bio, ma photo et mes informations depuis mon profil<br>';
+      html += '• Demander la suppression complète de mes données en écrivant à <strong>' + CONFIG.EMAIL_RGPD + '</strong><br>';
+      html += '• Consulter la <a href="confidentialite.html" target="_blank" style="color:var(--purple);">politique de confidentialité complète</a><br><br>';
+      html += 'Aucune donnée n\'est partagée avec des tiers ou utilisée à des fins commerciales.';
+      html += '</div>';
+
+      html += '<div id="alert-box"></div>';
+
+      html += '<button class="btn btn-primary btn-full" onclick="accepterRGPD()" id="accept-btn">J\'accepte et j\'active mon compte</button>';
+      html += '<div style="text-align:center;margin-top:14px;">';
+      html += '<a onclick="refuser()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;text-decoration:underline;">Je refuse, me déconnecter</a>';
+      html += '</div>';
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    async function accepterRGPD() {
+      const btn = document.getElementById('accept-btn');
+      const alertBox = document.getElementById('alert-box');
+      btn.textContent = 'Activation...';
+      btn.disabled = true;
+
+      try {
+        await baserowUpdate(CONFIG.TABLE_ALUMNI, alumniRow['id'], { 'RGPD': true });
+        window.location.href = 'annuaire.html';
+      } catch (e) {
+        alertBox.innerHTML = '<div class="alert alert-error">Erreur lors de l\'activation. Réessayez ou contactez ' + CONFIG.EMAIL_RGPD + '</div>';
+        btn.textContent = 'J\'accepte et j\'active mon compte';
+        btn.disabled = false;
+      }
+    }
+
+    function refuser() {
+      logout();
+    }
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
